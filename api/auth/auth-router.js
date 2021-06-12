@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { jwtSecret} = require('../../config/secret')
 const Users = require('../jokes/jokes-users-model')
 
 
@@ -13,9 +14,7 @@ router.post('/register', (req, res) => {
 
   Users.add(user)
   .then(saved => {
-    res.status(201).json({
-      message: `Great to have you, ${saved.username}`,
-    });
+    res.status(201).json(saved);
   })
   .catch(err => {
     console.log(err)
@@ -50,7 +49,22 @@ router.post('/register', (req, res) => {
 
 
 router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+  const { username , password } = req.body
+
+  Users.findBy({ username }) // it would be nice to have middleware do this
+  .then(([user]) => {
+    if (user && bcrypt.compareSync(password, user.password)) {
+      const token = makeToken(user)
+        res.status(200).json({message: `Welcome ${user.username}`, token})
+        
+    } else {
+      res.status(401).json({ message: 'Invalid Credentials' });
+    }
+  })
+  .catch(err => {
+    console.log(err)
+    res.status(500).json({ message: "Could not register user" })
+  });
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -75,5 +89,16 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+function makeToken(user){
+  const payload = {
+    subject: user.id,
+    username: user.username,
+  }
+  const options = {
+    expiresIn: "500s"
+  }
+  return jwt.sign(payload, jwtSecret, options)
+}
 
 module.exports = router;
