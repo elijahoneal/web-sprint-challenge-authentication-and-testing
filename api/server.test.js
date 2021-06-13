@@ -31,4 +31,22 @@ describe('server.js', () => {
     })
   })
 
+  describe('[POST] /login', () => {
+    it('sends user credentials and returns a token', async () => {
+    await request(server).post('/api/auth/login').send({ 
+        username: "Captain Marvel", 
+        password: "foobar"
+      })
+     expect.objectContaining({token: expect.anything()})
+    })
+
+    it('sends error message if credentials are invalid', async () => {
+     const res = await request(server).post('/api/auth/login').send({ 
+        username: "", 
+        password: ""
+      })
+      expect(res.body).toMatchObject({message: /'username and password required'/i})
+    })
+  })
+
 })
