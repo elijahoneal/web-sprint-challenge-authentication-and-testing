@@ -13,7 +13,7 @@ const checkCredentials = (req, res, next) => {
 const checkUsernameExists = async (req, res, next) => {
     const { username } = req.body
    await Users.findBy({username})
-    .then(([user]) => {
+    .then((user) => {
         if(user.username){
             res.json({message: "username taken"})
         } else {
