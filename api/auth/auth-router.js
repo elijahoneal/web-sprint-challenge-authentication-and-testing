@@ -3,9 +3,9 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { jwtSecret} = require('../../config/secret')
 const Users = require('../jokes/jokes-users-model')
+const {checkCredentials , checkUsernameExists} = require('./auth-middleware')
 
-
-router.post('/register', (req, res) => {
+router.post('/register', checkCredentials, checkUsernameExists, (req, res) => {
   let user = req.body;
 
   const hash = bcrypt.hashSync(user.password , 8)
@@ -48,10 +48,10 @@ router.post('/register', (req, res) => {
   */
 
 
-router.post('/login', (req, res) => {
+router.post('/login', checkCredentials, (req, res) => {
   const { username , password } = req.body
 
-  Users.findBy({ username }) // it would be nice to have middleware do this
+  Users.findBy({ username }) 
   .then(([user]) => {
     if (user && bcrypt.compareSync(password, user.password)) {
       const token = makeToken(user)
